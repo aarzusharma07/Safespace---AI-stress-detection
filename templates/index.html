@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Latest Results | Stress App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: 
+        linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)),
+        url("/static/bg.png") no-repeat center center/cover;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    nav {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: bold;
+      color: #2343e1;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 15px;
+      color: #111;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background-color: #2343e1;
+      color: white;
+      box-shadow: 0 4px 12px rgba(35, 67, 225, 0.4);
+    }
+
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(18px);
+      border-radius: 20px;
+      padding: 30px;
+      width: 100%;
+      max-width: 900px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      animation: fadeUp 0.8s ease;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 28px;
+      margin-bottom: 24px;
+      color: #2343e1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      color: #222;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    th {
+      background-color: rgba(0, 95, 153, 0.5);
+      color: #fff;
+    }
+
+    tr:nth-child(even) td {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    td.emoji {
+      font-size: 28px;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .nav-links a {
+        width: 100%;
+      }
+
+      table, th, td {
+        font-size: 14px;
+      }
+
+      td.emoji {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="logo">StressSense</div>
+    <div class="nav-links">
+      <a href="home.php">Home</a>
+      <a href="templates/webcam.html">Webcam Detection</a>
+      <a href="voice.html">Voice Analysis</a>
+      <a href="logout.php">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="container">
+      <h1>📊 Latest Stress Detection Results</h1>
+      <table>
+        <thead>
+          <tr id="header-row"></tr>
+        </thead>
+        <tbody id="data-rows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const headers = ["Webcam Emotion", "Voice Stress", "Survey Stress", "Created At"];
+    const headerRow = document.getElementById('header-row');
+    const tbody = document.getElementById('data-rows');
+
+    headers.forEach(h => {
+      const th = document.createElement('th');
+      th.textContent = h;
+      headerRow.appendChild(th);
+    });
+
+    async function fetchData() {
+      try {
+        const res = await fetch('/get_all_data?_=' + new Date().getTime());
+        const data = await res.json();
+
+        tbody.innerHTML = '';
+
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4">No data available</td></tr>';
+          return;
+        }
+
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          row.forEach((cell, idx) => {
+            const td = document.createElement('td');
+            td.textContent = cell;
+
+            if (idx === 0) td.classList.add('emoji');
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Fetch error:', err);
+      }
+    }
+
+    setInterval(fetchData, 1000);
+    fetchData();
+  </script>
+
+</body>
+</html>

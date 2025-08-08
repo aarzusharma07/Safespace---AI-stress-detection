@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Webcam Detection | Stress App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)),
+       url("/static/bg.png")  no-repeat center center/cover;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    nav {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: bold;
+      color: #2343e1;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 15px;
+      color: #111;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background-color: #2343e1;
+      color: white;
+      box-shadow: 0 4px 12px rgba(35, 67, 225, 0.4);
+    }
+
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 20px 40px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(18px);
+      border-radius: 20px;
+      padding: 40px 30px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      animation: fadeUp 0.8s ease;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+      color: #2343e1;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+.survey-btn {
+  display: inline-block;
+  margin-top: 20px;
+  width: 100%;
+  text-align: center;
+  background-color: #2343e1;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 16px rgba(35, 67, 225, 0.3);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.survey-btn:hover {
+  background-color: #102dc4;
+  transform: scale(1.03);
+}
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      background-color: #2343e1;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #102dc4;
+      transform: scale(1.03);
+    }
+
+    .emotion, .emoji, .timestamp {
+      font-size: 16px;
+      color: #333;
+      margin-top: 12px;
+    }
+
+    .emoji {
+      font-size: 36px;
+    }
+
+    .timestamp {
+      font-size: 13px;
+      color: #555;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      .nav-links a {
+        width: 100%;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="logo">StressSense</div>
+    <div class="nav-links">
+      <a href="home.php">Home</a>
+      <a href="templates/webcam.html">Webcam Detection</a>
+      <a href="voice.html">Voice Analysis</a>
+      <a href="logout.php">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Webcam Detection UI -->
+  <div class="main-content">
+    <div class="container">
+      <h1>Real-Time Emotion Detection</h1>
+      <video id="webcam" autoplay playsinline muted></video>
+      <button onclick="toggleDetection()" id="toggleBtn">Start Detection</button>
+      <div class="emotion" id="emotionText">Emotion: --</div>
+      <div class="emoji" id="emotionEmoji">😐</div>
+      <div class="timestamp" id="lastUpdated">Last updated: --</div>
+      <a href="http://127.0.0.1:5050" class="survey-btn">Next → Start Survey</a>
+    </div>
+  </div>
+<!-- Survey Button -->
+
+
+
+
+  <script>
+    const video = document.getElementById("webcam");
+    const emotionText = document.getElementById("emotionText");
+    const emotionEmoji = document.getElementById("emotionEmoji");
+    const lastUpdated = document.getElementById("lastUpdated");
+    const toggleBtn = document.getElementById("toggleBtn");
+
+    let intervalId = null;
+
+    const emojiMap = {
+      Angry: "😠", Disgust: "🤢", Fear: "😨",
+      Happy: "😊", Sad: "😢", Surprise: "😲", Neutral: "😐"
+    };
+
+    async function startCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      video.srcObject = stream;
+
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      intervalId = setInterval(async () => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+        const formData = new FormData();
+        formData.append("frame", blob, "frame.jpg");
+
+        const response = await fetch("/detect_frame", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+        const emotion = result.emotion;
+
+        emotionText.textContent = "Emotion: " + emotion;
+        emotionEmoji.textContent = emojiMap[emotion] || "😐";
+        lastUpdated.textContent = "Last updated: " + new Date().toLocaleTimeString();
+      }, 3000);
+    }
+
+    function stopDetection() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+        emotionText.textContent = "Emotion: --";
+        emotionEmoji.textContent = "😐";
+        lastUpdated.textContent = "Last updated: --";
+        toggleBtn.textContent = "Start Detection";
+      }
+    }
+
+    function toggleDetection() {
+      if (intervalId) {
+        stopDetection();
+      } else {
+        startCamera();
+        toggleBtn.textContent = "Stop Detection";
+      }
+    }
+  </script>
+
+</body>
+</html>
+<!--.\venv\Scripts\activate-->

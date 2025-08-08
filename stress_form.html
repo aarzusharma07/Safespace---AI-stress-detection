@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stress Survey | Stress App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)),
+        url("/static/bg.png") no-repeat center center/cover;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    nav {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(12px);
+      padding: 16px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: bold;
+      color: #2343e1;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      font-size: 15px;
+      color: #111;
+      font-weight: 500;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      background-color: #2343e1;
+      color: white;
+      box-shadow: 0 4px 12px rgba(35, 67, 225, 0.4);
+    }
+
+    .main {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(18px);
+      border-radius: 20px;
+      padding: 30px 20px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+      color: #111;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 28px;
+      color: #2343e1;
+    }
+
+    .question {
+      margin-bottom: 15px;
+    }
+
+    label {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+    }
+
+    button {
+      margin-top: 25px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background-color: #2343e1;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(35, 67, 225, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 25px rgba(35, 67, 225, 0.5);
+    }
+
+    #result {
+      margin-top: 20px;
+      background: rgba(255,255,255,0.3);
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .survey-btn {
+      display: inline-block;
+      margin-top: 20px;
+      width: 100%;
+      text-align: center;
+      background-color: #2343e1;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 4px 16px rgba(35, 67, 225, 0.3);
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+
+    .survey-btn:hover {
+      background-color: #102dc4;
+      transform: scale(1.03);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav>
+    <div class="logo">StressSense</div>
+    <div class="nav-links">
+      <a href="home.html">Home</a>
+      <a href="/webcam">Webcam Detection</a>
+      <a href="/voice">Voice Analysis</a>
+      <a href="logout.php">Logout</a>
+    </div>
+  </nav>
+
+  <!-- Main Survey Section -->
+  <div class="main">
+    <div class="container">
+      <h1>🧠 Stress Survey</h1>
+      <form id="surveyForm">
+        <div id="questions"></div>
+        <button type="button" onclick="submitSurvey()">Submit</button>
+        <div id="result"></div>
+        <a href="http://127.0.0.1:5001" target="_blank" class="survey-btn">Next → Voice Detection</a>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const questionsList = [
+      "I found it hard to relax.",
+      "I got upset too easily.",
+      "I felt nervous or restless.",
+      "I felt angry or irritated.",
+      "I had trouble staying calm.",
+      "Small things made me annoyed.",
+      "I felt sensitive or easily hurt."
+    ];
+
+    const container = document.getElementById("questions");
+
+    questionsList.forEach((text, index) => {
+      const div = document.createElement("div");
+      div.className = "question";
+      div.innerHTML = `
+        <label for="q${index}">${index + 1}. ${text}</label>
+        <select id="q${index}">
+          <option value="1">1 - Never</option>
+          <option value="2">2 - Rarely</option>
+          <option value="3" selected>3 - Sometimes</option>
+          <option value="4">4 - Often</option>
+          <option value="5">5 - Always</option>
+        </select>
+      `;
+      container.appendChild(div);
+    });
+
+    async function submitSurvey() {
+      const answers = [];
+      for (let i = 0; i < questionsList.length; i++) {
+        const val = parseInt(document.getElementById(`q${i}`).value);
+        answers.push(val);
+      }
+
+      const res = await fetch("http://127.0.0.1:5050/predict_stress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ responses: answers })
+      });
+
+      const data = await res.json();
+      const resultDiv = document.getElementById("result");
+
+      if (data.error) {
+        resultDiv.innerHTML = `❌ Error: ${data.error}`;
+      } else {
+        resultDiv.innerHTML = `
+          ✅ <strong>Predicted Class:</strong> ${data.predicted_class}<br>
+          📊 <strong>Stress Level:</strong> ${data.stress_level}
+        `;
+      }
+    }
+  </script>
+
+</body>
+</html>

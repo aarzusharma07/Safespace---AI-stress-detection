@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MQTT Live Readings | StressSense</title>
+<style>
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.12)),
+      url("bg.png") no-repeat center center/cover;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  nav {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 16px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    font-size: 26px;
+    font-weight: bold;
+    color: #2343e1;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 22px;
+  }
+
+  .nav-links a {
+    text-decoration: none;
+    font-size: 15px;
+    color: #111;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+
+  .nav-links a:hover {
+    background-color: #2343e1;
+    color: white;
+    box-shadow: 0 4px 12px rgba(35, 67, 225, 0.4);
+  }
+
+  .main-content {
+    flex-grow: 1;
+    flex-direction: column;
+    display: flex;
+    align-items: center;
+    padding: 60px 20px 40px;
+  }
+
+  .container {
+    background: rgba(255, 255, 255, 0.28);
+    backdrop-filter: blur(18px);
+    border-radius: 20px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    animation: fadeUp 0.8s ease;
+  }
+
+  h1 {
+    font-size: 26px;
+    margin-bottom: 25px;
+    color: #2343e1;
+  }
+
+  #messages {
+    border: 1px solid rgba(35, 67, 225, 0.4);
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 12px;
+    padding: 15px;
+    height: 300px;
+    overflow-y: auto;
+    text-align: left;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+    color: #111;
+  }
+
+  .message {
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+
+  .topic {
+    font-weight: 700;
+    color: #2343e1;
+    margin-right: 8px;
+  }
+
+  .message strong {
+    color: #102dc4;
+  }
+
+  .dashboard-btn {
+    margin-top: 20px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    background-color: #2343e1;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .dashboard-btn:hover {
+    background-color: #102dc4;
+    transform: scale(1.03);
+  }
+
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    nav {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .nav-links {
+      flex-direction: column;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .nav-links a {
+      width: 100%;
+    }
+
+    h1 {
+      font-size: 22px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">StressSense</div>
+  <div class="nav-links">
+    <a href="home.php">Home</a>
+    <a href="templates/webcam.html">Webcam Detection</a>
+    <a href="voice.html">Voice Analysis</a>
+    <a href="logout.php">Logout</a>
+  </div>
+</nav>
+
+<div class="main-content">
+  <div class="container">
+    <h1>MQTT Live Readings</h1>
+    <div id="messages"></div>
+    <a href="http://127.0.0.1:8000"><button class="dashboard-btn">Dashboard</button></a>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  const messagesDiv = document.getElementById('messages');
+
+  socket.on('mqtt_message', ({ topic, message }) => {
+    console.log('Received message:', message); // Debug log
+
+    let parsed;
+    try {
+      parsed = JSON.parse(message);
+    } catch (e) {
+      // If not JSON, try parsing simple HR/SPO2 from string format "HR: 110, SPO2: 96"
+      const hrMatch = message.match(/HR[:\s]*(\d+)/i);
+      const spo2Match = message.match(/SPO2[:\s]*(\d+)/i);
+
+      if (hrMatch && spo2Match) {
+        const heart_rate = parseInt(hrMatch[1]);
+        const spo2 = parseInt(spo2Match[1]);
+
+        displayReading(topic, heart_rate, spo2);
+      } else {
+        // If no match, just show raw message
+        appendMessage(topic, message);
+      }
+      return;
+    }
+
+    if (parsed.heart_rate !== undefined && parsed.spo2 !== undefined) {
+      displayReading(topic, parsed.heart_rate, parsed.spo2);
+    } else {
+      appendMessage(topic, message);
+    }
+  });
+
+  function displayReading(topic, heart_rate, spo2) {
+    const stressStatus = heart_rate > 100 ? '⚠️ Stress' : '✔️ No Stress';
+    const stressColor = heart_rate > 100 ? '#d63031' : '#00b894';
+
+    const card = document.createElement('div');
+    card.classList.add('message');
+    card.style.background = 'rgba(35, 67, 225, 0.1)';
+    card.style.borderRadius = '10px';
+    card.style.padding = '12px';
+    card.style.marginBottom = '12px';
+    card.style.display = 'flex';
+    card.style.justifyContent = 'space-around';
+    card.style.fontWeight = '600';
+    card.style.color = '#2343e1';
+    card.style.alignItems = 'center';
+
+    card.innerHTML = `
+      <div>❤️ Heart Rate: <strong>${heart_rate} bpm</strong></div>
+      <div>🩸 SpO₂: <strong>${spo2}%</strong></div>
+      <div style="color: ${stressColor}; font-weight: 700; min-width: 100px; text-align: center;">
+        ${stressStatus}
+      </div>
+    `;
+
+    messagesDiv.appendChild(card);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function appendMessage(topic, message) {
+    const div = document.createElement('div');
+    div.classList.add('message');
+    div.innerHTML = `<span class="topic">${topic}</span>: ${message}`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+</script>
+
+</body>
+</html>
