@@ -32,6 +32,12 @@ Sensors → HR/Respiration ┘
 pip install -r requirements.txt
 python stress_api.py
 ```
+##  Dataset
+- Survey Dataset (Kaggle)
+- Voice Stress Audio (Custom)
+- Emotion Detection Images (FER-2013 or custom)
+## 📷 Screenshots
+<img width="1221" height="786" alt="image" src="https://github.com/user-attachments/assets/d7eadfb1-996c-4eb3-82e5-f3afa45a996c-4eb3-82e5-f3afa45a1b5?..." />
 
 > Experimental ML project for educational purposes; not a clinical diagnostic tool.
 
